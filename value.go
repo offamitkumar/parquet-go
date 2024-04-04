@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 	"unsafe"
+    "runtime"
 
 	"github.com/google/uuid"
 	"github.com/parquet-go/parquet-go/deprecated"
@@ -371,9 +372,15 @@ func makeValueInt96(value deprecated.Int96) Value {
 	// is a deprecated feature of parquet, and it helps keep the Value type
 	// compact for all the other more common cases.
 	bits := [12]byte{}
-	binary.LittleEndian.PutUint32(bits[0:4], value[0])
-	binary.LittleEndian.PutUint32(bits[4:8], value[1])
-	binary.LittleEndian.PutUint32(bits[8:12], value[2])
+    if runtime.GOARCH == "s390x" {
+        binary.BigEndian.PutUint32(bits[0:4], value[0])
+        binary.BigEndian.PutUint32(bits[4:8], value[1])
+        binary.BigEndian.PutUint32(bits[8:12], value[2])
+    } else {
+        binary.LittleEndian.PutUint32(bits[0:4], value[0])
+        binary.LittleEndian.PutUint32(bits[4:8], value[1])
+        binary.LittleEndian.PutUint32(bits[8:12], value[2])
+    }
 	return Value{
 		kind: ^int8(Int96),
 		ptr:  &bits[0],
