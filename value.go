@@ -791,11 +791,19 @@ func (v Value) Clone() Value {
 }
 
 func makeInt96(bits []byte) (i96 deprecated.Int96) {
-	return deprecated.Int96{
-		2: binary.LittleEndian.Uint32(bits[8:12]),
-		1: binary.LittleEndian.Uint32(bits[4:8]),
-		0: binary.LittleEndian.Uint32(bits[0:4]),
-	}
+    if runtime.GOARCH == "s390x" {
+        return deprecated.Int96{
+            2: binary.BigEndian.Uint32(bits[8:12]),
+            1: binary.BigEndian.Uint32(bits[4:8]),
+            0: binary.BigEndian.Uint32(bits[0:4]),
+        }
+    } else {
+        return deprecated.Int96{
+            2: binary.LittleEndian.Uint32(bits[8:12]),
+            1: binary.LittleEndian.Uint32(bits[4:8]),
+            0: binary.LittleEndian.Uint32(bits[0:4]),
+        }
+    }
 }
 
 func parseValue(kind Kind, data []byte) (val Value, err error) {
